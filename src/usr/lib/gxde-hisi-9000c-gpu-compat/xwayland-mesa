@@ -1,0 +1,6 @@
+#!/bin/bash
+# Xwayland wrapper: 剥离 hisi 环境，让 Xwayland 用系统 Mesa GL（软件/llvmpipe）
+# wlroots 通过 WLR_XWAYLAND 调用本脚本
+unset LD_PRELOAD
+unset LD_LIBRARY_PATH
+exec /usr/bin/Xwayland "$@"

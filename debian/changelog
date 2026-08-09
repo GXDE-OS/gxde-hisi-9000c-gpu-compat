@@ -1,0 +1,9 @@
+gxde-hisi-9000c-gpu-compat (1.0.0) unstable; urgency=medium
+
+  * Initial release: hisi GPU (Maleoon 910) compatibility layer for GXDE
+    on HiSilicon Kirin 9000c with the Kylin 5.10.97-38-9000c kernel.
+    Includes the startgxde_wlcom_9000c hisi EGL/gbm session launcher,
+    UOS libwayland 1.21, the LD_PRELOAD compat shim and the
+    xwayland-mesa wrapper.
+
+ -- shenmo <jifengshenmo@outlook.com>  Sat, 09 Aug 2026 18:30:00 +0800

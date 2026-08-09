@@ -1,0 +1,33 @@
+Source: gxde-hisi-9000c-gpu-compat
+Section: utils
+Priority: optional
+Maintainer: shenmo <jifengshenmo@outlook.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ gcc
+Standards-Version: 4.6.2
+Homepage: https://gitee.com/GXDE-OS
+
+Package: gxde-hisi-9000c-gpu-compat
+Architecture: arm64
+Depends:
+ gxde-wlcom (>= 2.1.6-gxde5),
+ hw-maleoon-910,
+ libwayland-client0,
+ libwayland-cursor0
+Description: HiSilicon (Kirin 9000c) GPU compatibility layer for GXDE
+ Enables hardware-accelerated (Maleoon 910) GXDE desktop on HiSilicon
+ Kirin 9000c machines running the Kylin 5.10.97-38-9000c kernel.
+ .
+ Provides:
+  - startgxde_wlcom_9000c session launcher (hisi EGL/gbm/GLESv2),
+    auto-invoked by gxde-wlcom (>= 2.1.6-gxde5) when the kirin 9000c
+    kernel is detected
+  - UOS libwayland 1.21 client/cursor libraries (the hisi driver was
+    built against them; Debian's 1.23 lacks wl_proxy_ref & co.)
+  - libhisi_gbm_shim.so LD_PRELOAD shim (eglGetPlatformDisplay for Qt,
+    gbm_bo_create_with_modifiers2/gbm_bo_get_fd_for_plane for Xwayland,
+    and a corrected wl_surface_interface fixing Qt6 "no event 2")
+  - xwayland-mesa wrapper so Xwayland uses Mesa instead of the hisi GL
+ .

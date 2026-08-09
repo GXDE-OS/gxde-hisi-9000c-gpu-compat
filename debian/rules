@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+# 编译 LD_PRELOAD 兼容 shim（eglGetPlatformDisplay / gbm_* / 修正 wl_surface_interface）
+override_dh_auto_build:
+	gcc -O2 -shared -fPIC \
+	    -o src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so \
+	    src/usr/lib/gxde-hisi-9000c-gpu-compat/hisi_gbm_shim.c -ldl
+
+# 重新构建前清理生成的 .so，避免陈旧产物
+override_dh_clean:
+	rm -f src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so
+	dh_clean

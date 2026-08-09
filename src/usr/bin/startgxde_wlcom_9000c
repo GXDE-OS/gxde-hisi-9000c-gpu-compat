@@ -1,0 +1,46 @@
+#!/bin/bash
+# ============================================================
+# startgxde_wlcom_9000c — hisi GPU (Maleoon 910) 硬件加速
+# GXDE 会话启动器（麒麟 9000c 内核）。
+#
+# 由 /usr/bin/startgxde_wlcom 检测到 kirin 9000c 后调用；
+# 也可在文本终端手动执行（先 sudo systemctl stop gxdm）。
+#
+# 组件由 gxde-hisi-9000c-gpu-compat 包提供：
+#   - server-egl/          hisi libEGL/gbm/GLESv2 + UOS libwayland 1.21
+#   - libhisi_gbm_shim.so  eglGetPlatformDisplay + gbm_* 兼容 + 修正的
+#                          wl_surface_interface（解决 Qt6 "no event 2"）
+#   - xwayland-mesa        Xwayland 用系统 Mesa，避免 hisi GL 崩溃
+# ============================================================
+export PATH=$PATH:/sbin
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_DESKTOP=Deepin
+export DDE_CURRENT_COMPOSITOR=GXWM
+export GXWM_DONOT_BROADCAST_TLPM=ON
+export KYWC_USE_LAYOUT_MANAGER=1
+unset QT_QPA_PLATFORM
+unset DTK2_XWAYLAND
+
+# libseat 强制 logind（与 gxdm 一致）
+if [ -z "$LIBSEAT_BACKEND" ] && [ -n "$XDG_SESSION_ID" ] && [ -d /run/systemd/seats ]; then
+    export LIBSEAT_BACKEND=logind
+fi
+
+# === hisi GPU 硬件加速环境 ===
+HISI_DIR=/usr/lib/gxde-hisi-9000c-gpu-compat
+export LD_LIBRARY_PATH=$HISI_DIR/server-egl
+export LD_PRELOAD=$HISI_DIR/libhisi_gbm_shim.so
+# WAYLAND_DISPLAY/DISPLAY 会让 wlroots 误选嵌套后端，显式强制 DRM
+export WLR_BACKENDS=drm,libinput
+# 跳过 EGL modifier 查询，避免 hisi 拒绝仅 {INVALID} 的列表
+export WLR_EGL_NO_MODIFIERS=1
+export KYWC_EGL_NO_MODIFIERS=1
+# Xwayland 用 Mesa（软件），剥离 hisi 环境
+export WLR_XWAYLAND=$HISI_DIR/xwayland-mesa
+
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/1000}
+# 清理陈旧 X socket（否则 Xwayland 会挑 :1 导致 DISPLAY 不匹配）
+rm -f /tmp/.X*-lock /tmp/.X11-unix/X* 2>/dev/null
+export DISPLAY=:0
+
+exec /usr/bin/gxde-wlcom -s /usr/bin/startdde "$@"
