@@ -1,4 +1,4 @@
-gxde-hisi-9000c-gpu-compat (1.0.2) unstable; urgency=medium
+gxde-hisi-9000c-gpu-compat (1.0.3) unstable; urgency=medium
 
   * 新增 /usr/local/bin/gxde-movie 启动劫持：剥离 LD_PRELOAD /
     LD_LIBRARY_PATH 并禁用 Vulkan ICD（VK_ICD_FILENAMES=VK_DRIVER_FILES=
@@ -7,6 +7,8 @@ gxde-hisi-9000c-gpu-compat (1.0.2) unstable; urgency=medium
   * shim 新增 wl_display_create_queue_with_name（wayland 1.23 API，
     UOS 1.21 缺失）：修复 Mesa libEGL_mesa / libvulkan_lvp 在
     UOS 1.21 环境下的 symbol lookup error（vulkaninfo 可正常跑）
+  * dh_shlibdeps排除libwayland-cursor.so.0.21.0、libhisi_gbm_shim.so、
+    libwayland-client.so.0.21.0
 
  -- shenmo <jifengshenmo@outlook.com>  Mon, 10 Aug 2026 21:00:00 +0800
 
