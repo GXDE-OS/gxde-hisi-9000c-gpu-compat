@@ -198,3 +198,12 @@ CI（`.github/workflows/building.yml`）在推送 tag 时自动构建。
 13. **IDE 编辑陷阱**：如果 `.c` 源文件在 IDE 里处于打开状态，通过其他方式编辑磁盘
     文件可能被编辑器缓冲覆盖。改 shim 源码后务必确认磁盘上的内容（`objdump -s` /
     `cat`）与预期一致，再构建。
+
+14. **个别应用与 shim 不兼容 → 用 `/usr/local/bin` 劫持启动脚本剥离环境**。
+    会话级 `LD_PRELOAD=libhisi_gbm_shim.so` 对所有桌面进程生效，但少数应用
+    （如 gxde-movie 的 mpv/Qt OpenGL 视频路径）会因此崩溃。处理方式与
+    `xwayland-mesa` 相同：装一个 `/usr/local/bin/<app>` 脚本
+    （`unset LD_PRELOAD; unset LD_LIBRARY_PATH; exec /usr/bin/<app> "$@"`）。
+    `.desktop` 的 `Exec=<app> %U` 是裸命令名，按 PATH 解析，`/usr/local/bin`
+    优先于 `/usr/bin`，故无需改桌面文件。新增此类劫持时记住同步 changelog。
+

@@ -13,3 +13,8 @@ override_dh_auto_build:
 override_dh_clean:
 	rm -f src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so
 	dh_clean
+
+# 按需求将启动劫持脚本直接装入 /usr/local/bin（dh_usrlocal 只支持整目录树，
+# 不支持 /usr/local/bin 下的单个文件，故跳过；文件由 dpkg 直接管理）
+override_dh_usrlocal:
+	@true
