@@ -4,6 +4,9 @@ gxde-hisi-9000c-gpu-compat (1.0.1) unstable; urgency=medium
     LD_LIBRARY_PATH 并禁用 Vulkan ICD（VK_ICD_FILENAMES=VK_DRIVER_FILES=
     /dev/null），修复 gxde-movie 在 hisi 会话中打开视频崩溃的问题
     （mpv hwdec 探测加载 libhvgr 触发段错误）
+  * shim 新增 wl_display_create_queue_with_name（wayland 1.23 API，
+    UOS 1.21 缺失）：修复 Mesa libEGL_mesa / libvulkan_lvp 在
+    UOS 1.21 环境下的 symbol lookup error（vulkaninfo 可正常跑）
 
  -- shenmo <jifengshenmo@outlook.com>  Mon, 10 Aug 2026 20:25:00 +0800
 

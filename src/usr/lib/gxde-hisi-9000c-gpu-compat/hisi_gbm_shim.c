@@ -81,6 +81,23 @@ EGLDisplay eglGetPlatformDisplay(EGLenum platform, void *native_display,
 }
 
 /* ------------------------------------------------------------------ */
+/* Wayland 1.23 API 缺失补丁: wl_display_create_queue_with_name.      */
+/* Mesa 的 libEGL_mesa / libvulkan_lvp（软件 Vulkan）按 wayland 1.23  */
+/* 编译，引用此符号；UOS 1.21 没有。真实实现：转发到                  */
+/* wl_display_create_queue（name 参数仅用于调试，可忽略）。           */
+/* ------------------------------------------------------------------ */
+struct wl_event_queue *wl_display_create_queue_with_name(void *display,
+                                                         const char *name)
+{
+    struct wl_event_queue *(*real_fn)(void *);
+    real_fn = (struct wl_event_queue *(*)(void *))
+              dlsym(RTLD_NEXT, "wl_display_create_queue");
+    if (real_fn)
+        return real_fn(display);
+    return NULL;
+}
+
+/* ------------------------------------------------------------------ */
 /* Wayland: fix wl_surface_interface missing events.                  */
 /*                                                                     */
 /* UOS 1.21's generated interface table is a *v5* wl_surface (only    */
