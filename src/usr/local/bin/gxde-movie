@@ -5,16 +5,24 @@
 # 背景：在 hisi 硬件加速会话中，会话级环境变量
 #   LD_PRELOAD=/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so
 #   LD_LIBRARY_PATH=.../server-egl （UOS libwayland 1.21 + hisi EGL）
-# 会让 gxde-movie（Qt6 + libmpv）在打开视频时崩溃（mpv/Qt OpenGL
-# 渲染路径与 shim 的符号拦截冲突）。
+# 会让 gxde-movie（Qt6 + libmpv）打开视频时崩溃。
 #
-# 处理：剥离 hisi 环境后调用原二进制，播放器走系统
-#   libwayland 1.23 + Mesa GL（与 xwayland-mesa 相同的处理方式），
-#   渲染稳定；同时避免 Qt6 在 UOS 1.21 下的 "no event 2" 问题。
+# 处理：
+#   1) unset LD_PRELOAD / LD_LIBRARY_PATH —— 播放器走系统
+#      libwayland 1.23 + Mesa GL（与 xwayland-mesa 同模式）。
+#   2) VK_ICD_FILENAMES / VK_DRIVER_FILES=/dev/null —— 阻止 mpv 的
+#      hwdec 探测（gxde-movie 强制 hwdec-preload=auto）加载 hisi
+#      Vulkan 驱动 libhvgr.so：其 page-flip 线程会段错误，导致
+#      打开视频即崩溃（实测）。
+#
+# 注：gxde-movie 检测到 wayland 会话后故意清空 WAYLAND_DISPLAY、
+# 强制走 XWayland（源码 main.cpp），故本脚本不需要管 WAYLAND_DISPLAY。
 #
 # 安装位置 /usr/local/bin/gxde-movie：桌面 .desktop 的 Exec 是裸命令名
 #   `gxde-movie %U`，按 PATH 解析，/usr/local/bin 优先于 /usr/bin。
 # ============================================================
 unset LD_PRELOAD
 unset LD_LIBRARY_PATH
+export VK_ICD_FILENAMES=/dev/null
+export VK_DRIVER_FILES=/dev/null
 exec /usr/bin/gxde-movie "$@"

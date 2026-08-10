@@ -1,8 +1,9 @@
 gxde-hisi-9000c-gpu-compat (1.0.1) unstable; urgency=medium
 
   * 新增 /usr/local/bin/gxde-movie 启动劫持：剥离 LD_PRELOAD /
-    LD_LIBRARY_PATH 后调用原二进制，修复 gxde-movie 在 hisi 会话中
-    打开视频崩溃的问题（mpv/Qt OpenGL 路径与 gbm shim 冲突）
+    LD_LIBRARY_PATH 并禁用 Vulkan ICD（VK_ICD_FILENAMES=VK_DRIVER_FILES=
+    /dev/null），修复 gxde-movie 在 hisi 会话中打开视频崩溃的问题
+    （mpv hwdec 探测加载 libhvgr 触发段错误）
 
  -- shenmo <jifengshenmo@outlook.com>  Mon, 10 Aug 2026 20:25:00 +0800
 
