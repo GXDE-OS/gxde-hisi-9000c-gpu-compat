@@ -15,7 +15,8 @@ Depends:
  gxde-wlcom (>= 2.1.6-gxde5),
  hw-maleoon-910,
  libwayland-client0,
- libwayland-cursor0
+ libwayland-cursor0,
+ libffi6
 Description: HiSilicon (Kirin 9000c) GPU compatibility layer for GXDE
  Enables hardware-accelerated (Maleoon 910) GXDE desktop on HiSilicon
  Kirin 9000c machines running the Kylin 5.10.97-38-9000c kernel.
