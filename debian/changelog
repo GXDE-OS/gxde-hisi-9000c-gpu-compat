@@ -1,4 +1,4 @@
-gxde-hisi-9000c-gpu-compat (1.0.4) unstable; urgency=medium
+gxde-hisi-9000c-gpu-compat (1.0.5) unstable; urgency=medium
 
   * 新增 /usr/local/bin/gxde-movie 启动劫持：剥离 LD_PRELOAD /
     LD_LIBRARY_PATH 并禁用 Vulkan ICD（VK_ICD_FILENAMES=VK_DRIVER_FILES=
