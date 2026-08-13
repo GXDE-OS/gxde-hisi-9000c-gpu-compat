@@ -25,4 +25,4 @@ unset LD_PRELOAD
 unset LD_LIBRARY_PATH
 export VK_ICD_FILENAMES=/dev/null
 export VK_DRIVER_FILES=/dev/null
-exec /usr/bin/gxde-movie "$@"
+exec /usr/bin/gxde-movie "$@" -platform dxcb
