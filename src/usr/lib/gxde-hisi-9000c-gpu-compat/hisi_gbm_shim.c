@@ -3,6 +3,7 @@
  * for wlcom/gxde-wlcom + Xwayland + Qt/GLES clients on the live desktop:
  *
  *   gbm_bo_create_with_modifiers2  (Xwayland/glamor needs)
+ *   gbm_bo_create_with_modifiers   (hisi modifier-list quirk workaround)
  *   gbm_bo_get_fd_for_plane        (Xwayland/glamor needs)
  *   eglGetPlatformDisplay          (Qt5 wayland-egl plugin links this;
  *                                   hisi only exposes eglGetPlatformDisplayEXT
@@ -15,11 +16,93 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 
 struct gbm_device;
 struct gbm_bo;
+
+/* ------------------------------------------------------------------ */
+/* Kirin 9000c (Maleoon 910) gbm quirk workaround.                     */
+/*                                                                    */
+/* libGFX_hisi 的 gbm_bo_create_with_modifiers() 在 modifier 列表中   */
+/* DRM_FORMAT_MOD_INVALID 排在 DRM_FORMAT_MOD_LINEAR 之前时会"成功"    */
+/* 返回一个损坏的双平面 BO（modifier=INVALID、stride=0，驱动同时打印  */
+/* "Multiplane buffers not supported"），随后按平面导出 dmabuf 必然    */
+/* 失败。LINEAR 排在最前则得到正常的单平面线性 BO。                    */
+/* 只含 {INVALID} 的列表会被驱动直接拒绝；改写为 {LINEAR}，让调用方   */
+/* （如 wlroots 的 GBM 分配器）直接拿到可用的 BO。                     */
+/* 含真实 modifier 的列表保持原样，不干扰驱动的正常选择。             */
+/* ------------------------------------------------------------------ */
+#define SHIM_DRM_FORMAT_MOD_LINEAR  0ULL
+#define SHIM_DRM_FORMAT_MOD_INVALID ((1ULL << 56) - 1)
+
+static _Thread_local uint64_t hisi_fixed_mods[32];
+
+static const uint64_t *hisi_fixup_modifier_list(const uint64_t *modifiers,
+        uint32_t count, uint32_t *out_count)
+{
+    *out_count = count;
+    if (!modifiers || count == 0 || count > 32) {
+        return modifiers;
+    }
+
+    bool has_invalid = false, has_linear = false, has_real = false;
+    for (uint32_t i = 0; i < count; i++) {
+        if (modifiers[i] == SHIM_DRM_FORMAT_MOD_INVALID) {
+            has_invalid = true;
+        } else if (modifiers[i] == SHIM_DRM_FORMAT_MOD_LINEAR) {
+            has_linear = true;
+        } else {
+            has_real = true;
+        }
+    }
+
+    if (has_real) {
+        /* 有真实 modifier，保持原样 */
+        return modifiers;
+    }
+    if (!has_linear) {
+        if (count == 1 && has_invalid) {
+            /* 仅 {INVALID}：hisi 会拒绝，改写为 {LINEAR} */
+            hisi_fixed_mods[0] = SHIM_DRM_FORMAT_MOD_LINEAR;
+            *out_count = 1;
+            return hisi_fixed_mods;
+        }
+        return modifiers;
+    }
+
+    /* LINEAR 提前、INVALID 殿后 */
+    uint32_t n = 0;
+    if (has_linear) {
+        hisi_fixed_mods[n++] = SHIM_DRM_FORMAT_MOD_LINEAR;
+    }
+    if (has_invalid) {
+        hisi_fixed_mods[n++] = SHIM_DRM_FORMAT_MOD_INVALID;
+    }
+    *out_count = n;
+    return hisi_fixed_mods;
+}
+
+struct gbm_bo *gbm_bo_create_with_modifiers(struct gbm_device *dev,
+        uint32_t width, uint32_t height, uint32_t format,
+        const uint64_t *modifiers, uint32_t count)
+{
+    static struct gbm_bo *(*real_fn)(struct gbm_device *, uint32_t, uint32_t,
+        uint32_t, const uint64_t *, uint32_t);
+    if (!real_fn)
+        real_fn = (void *)dlsym(RTLD_NEXT, "gbm_bo_create_with_modifiers");
+    if (!real_fn) {
+        errno = ENOSYS;
+        return NULL;
+    }
+
+    uint32_t fixed_count = 0;
+    const uint64_t *fixed =
+        hisi_fixup_modifier_list(modifiers, count, &fixed_count);
+    return real_fn(dev, width, height, format, fixed, fixed_count);
+}
 
 struct gbm_bo *gbm_bo_create_with_modifiers2(struct gbm_device *dev,
         uint32_t width, uint32_t height, uint32_t format, uint32_t flags,
@@ -33,8 +116,12 @@ struct gbm_bo *gbm_bo_create_with_modifiers2(struct gbm_device *dev,
         errno = ENOSYS;
         return NULL;
     }
+
+    uint32_t fixed_count = 0;
+    const uint64_t *fixed =
+        hisi_fixup_modifier_list(modifiers, count, &fixed_count);
     /* flags (GBM_BO_CREATE_*) unused by hisi path; forward the rest */
-    return real_fn(dev, width, height, format, modifiers, count);
+    return real_fn(dev, width, height, format, fixed, fixed_count);
 }
 
 int gbm_bo_get_fd_for_plane(struct gbm_bo *bo, int plane)

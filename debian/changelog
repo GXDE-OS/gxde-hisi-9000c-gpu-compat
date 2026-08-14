@@ -1,3 +1,15 @@
+gxde-hisi-9000c-gpu-compat (1.0.6) unstable; urgency=medium
+
+  * shim 新增 gbm_bo_create_with_modifiers / gbm_bo_create_with_modifiers2
+    拦截：修正 Kirin 9000c (Maleoon 910) gbm 在 modifier 列表
+    {INVALID, LINEAR}（INVALID 在前）时返回损坏双平面 BO（modifier=INVALID、
+    stride=0、dmabuf 导出失败）的问题；LINEAR 提前、仅 {INVALID} 改写为
+    {LINEAR}。修复 wlcom 截图录屏捕获缓冲分配失败（"failed to create wlr
+    buffer" / "gbm_bo_get_fd_for_plane failed"）及随后 capture.c
+    use-after-free 导致的合成器崩溃（配合 gxde-wlcom 同步修复）。
+
+ -- shenmo <shenmo@spark-app.store>  Fri, 14 Aug 2026 22:45:00 +0800
+
 gxde-hisi-9000c-gpu-compat (1.0.5) unstable; urgency=medium
 
   * 新增 /usr/local/bin/gxde-movie 启动劫持：剥离 LD_PRELOAD /
@@ -10,7 +22,7 @@ gxde-hisi-9000c-gpu-compat (1.0.5) unstable; urgency=medium
   * dh_shlibdeps排除libwayland-cursor.so.0.21.0、libhisi_gbm_shim.so、
     libwayland-client.so.0.21.0
 
- -- shenmo <jifengshenmo@outlook.com>  Mon, 10 Aug 2026 21:00:00 +0800
+ -- shenmo <shenmo@spark-app.store>  Mon, 10 Aug 2026 21:00:00 +0800
 
 gxde-hisi-9000c-gpu-compat (1.0.0) unstable; urgency=medium
 
@@ -20,4 +32,4 @@ gxde-hisi-9000c-gpu-compat (1.0.0) unstable; urgency=medium
     UOS libwayland 1.21, the LD_PRELOAD compat shim and the
     xwayland-mesa wrapper.
 
- -- shenmo <jifengshenmo@outlook.com>  Sat, 09 Aug 2026 18:30:00 +0800
+ -- shenmo <shenmo@spark-app.store>  Sat, 09 Aug 2026 18:30:00 +0800
