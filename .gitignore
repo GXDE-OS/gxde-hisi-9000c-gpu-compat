@@ -4,6 +4,7 @@ debian/gxde-hisi-9000c-gpu-compat/
 debian/gxde-hisi-9000c-gpu-compat.substvars
 debian/debhelper-build-stamp
 debian/files
+debian/*.debhelper.log
 src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so
 *.deb
 *.buildinfo

@@ -199,11 +199,15 @@ CI（`.github/workflows/building.yml`）在推送 tag 时自动构建。
     文件可能被编辑器缓冲覆盖。改 shim 源码后务必确认磁盘上的内容（`objdump -s` /
     `cat`）与预期一致，再构建。
 
-14. **个别应用与 shim 不兼容 → 用 `/usr/local/bin` 劫持启动脚本剥离环境**。
-    会话级 `LD_PRELOAD=libhisi_gbm_shim.so` 对所有桌面进程生效，但少数应用
-    （如 gxde-movie 的 mpv/Qt OpenGL 视频路径）会因此崩溃。处理方式与
-    `xwayland-mesa` 相同：装一个 `/usr/local/bin/<app>` 脚本
-    （`unset LD_PRELOAD; unset LD_LIBRARY_PATH; exec /usr/bin/<app> "$@"`）。
+14. **个别应用与 hisi 环境不兼容 → 用 `/usr/local/bin` 劫持启动脚本剥离环境**。
+    会话级 `LD_LIBRARY_PATH=server-egl` + `LD_PRELOAD=libhisi_gbm_shim.so`
+    对所有桌面进程生效，但少数应用会因此崩溃或打不开：
+    - gxde-movie：mpv hwdec 探测加载 libhvgr 段错误 → `/usr/local/bin/gxde-movie`
+    - obs-studio：OBS 需要桌面 OpenGL 3.3，hisi libEGL 只支持 OpenGL ES，
+      `eglBindAPI(EGL_OPENGL_API)` 失败导致视频初始化失败 → `/usr/local/bin/obs`
+    处理方式与 `xwayland-mesa` 相同：装一个 `/usr/local/bin/<app>` 脚本
+    （`unset LD_PRELOAD; unset LD_LIBRARY_PATH; exec /usr/bin/<app> "$@"`，
+    需要时再禁用 Vulkan ICD）。
     `.desktop` 的 `Exec=<app> %U` 是裸命令名，按 PATH 解析，`/usr/local/bin`
     优先于 `/usr/bin`，故无需改桌面文件。新增此类劫持时记住同步 changelog。
 

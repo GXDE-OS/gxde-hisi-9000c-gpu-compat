@@ -1,3 +1,13 @@
+gxde-hisi-9000c-gpu-compat (1.0.7) unstable; urgency=medium
+
+  * 新增 /usr/local/bin/obs 启动劫持：剥离 LD_PRELOAD /
+    LD_LIBRARY_PATH 并禁用 Vulkan ICD（VK_ICD_FILENAMES=VK_DRIVER_FILES=
+    /dev/null），修复 OBS 在 hisi 会话中打不开的问题（OBS 需要桌面
+    OpenGL 3.3，而 hisi libEGL 只支持 OpenGL ES，eglBindAPI(EGL_OPENGL_API)
+    失败导致视频初始化失败）
+
+ -- shenmo <shenmo@spark-app.store>  Sat, 15 Aug 2026 21:20:00 +0800
+
 gxde-hisi-9000c-gpu-compat (1.0.6) unstable; urgency=medium
 
   * shim 新增 gbm_bo_create_with_modifiers / gbm_bo_create_with_modifiers2

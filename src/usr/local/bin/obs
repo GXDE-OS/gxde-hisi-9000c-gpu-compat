@@ -1,0 +1,26 @@
+#!/bin/bash
+# ============================================================
+# obs-studio 启动劫持（gxde-hisi-9000c-gpu-compat 提供）
+#
+# 背景：在 hisi 硬件加速会话中，会话级环境变量
+#   LD_LIBRARY_PATH=.../server-egl（hisi libEGL/gbm/GLESv2 + UOS libwayland 1.21）
+#   LD_PRELOAD=.../libhisi_gbm_shim.so
+# 会让 OBS 的 libobs-opengl 走 hisi libEGL。OBS 需要桌面 OpenGL 3.3
+# （libobs-opengl 调 eglBindAPI(EGL_OPENGL_API)），而 hisi libEGL 只支持
+# OpenGL ES（eglBindAPI(EGL_OPENGL_API) 失败），随后 eglChooseConfig 失败、
+# 视频初始化失败，OBS 打不开。
+#
+# 处理：
+#   1) unset LD_LIBRARY_PATH / LD_PRELOAD —— OBS 走系统 Mesa 桌面 GL
+#      （llvmpipe），与 xwayland-mesa / gxde-movie 同模式。
+#   2) VK_ICD_FILENAMES / VK_DRIVER_FILES=/dev/null —— 阻止加载 hisi
+#      Vulkan 驱动 libhvgr.so，避免其构造函数/探测对 OBS 的影响。
+#
+# 安装位置 /usr/local/bin/obs：桌面 .desktop 的 Exec 是裸命令名 `obs`，
+#   按 PATH 解析，/usr/local/bin 优先于 /usr/bin。
+# ============================================================
+unset LD_PRELOAD
+unset LD_LIBRARY_PATH
+export VK_ICD_FILENAMES=/dev/null
+export VK_DRIVER_FILES=/dev/null
+exec /usr/bin/obs "$@"
