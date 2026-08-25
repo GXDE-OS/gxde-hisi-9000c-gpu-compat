@@ -41,7 +41,7 @@ struct gbm_bo;
 static _Thread_local uint64_t hisi_fixed_mods[32];
 
 static const uint64_t *hisi_fixup_modifier_list(const uint64_t *modifiers,
-        uint32_t count, uint32_t *out_count)
+        uint32_t count, uint32_t width, uint32_t height, uint32_t *out_count)
 {
     *out_count = count;
     if (!modifiers || count == 0 || count > 32) {
@@ -64,8 +64,15 @@ static const uint64_t *hisi_fixup_modifier_list(const uint64_t *modifiers,
         return modifiers;
     }
     if (!has_linear) {
-        if (count == 1 && has_invalid) {
-            /* 仅 {INVALID}：hisi 会拒绝，改写为 {LINEAR} */
+        if (count == 1 && has_invalid && !(width == 1 && height == 1)) {
+            /* 仅 {INVALID}：hisi 会拒绝，改写为 {LINEAR}。
+             * 例外：Chromium/Electron 的 GPU 进程用 1x1 缓冲做
+             * dmabuf 探针。若把探针改写成 {LINEAR}，驱动会造出一个
+             * modifier=0 的 BO，随后 gbm_bo_import(FD_MODIFIER,
+             * modifier=0) 永远失败，GPU 进程无限重试并刷屏
+             * "modifier is 0"（clash-party 不加 --disable-gpu 打不开
+             * 的根因）。1x1 探针必须保持失败，让 Chromium 走软件/
+             * 回退路径。 */
             hisi_fixed_mods[0] = SHIM_DRM_FORMAT_MOD_LINEAR;
             *out_count = 1;
             return hisi_fixed_mods;
@@ -100,7 +107,7 @@ struct gbm_bo *gbm_bo_create_with_modifiers(struct gbm_device *dev,
 
     uint32_t fixed_count = 0;
     const uint64_t *fixed =
-        hisi_fixup_modifier_list(modifiers, count, &fixed_count);
+        hisi_fixup_modifier_list(modifiers, count, width, height, &fixed_count);
     return real_fn(dev, width, height, format, fixed, fixed_count);
 }
 
@@ -119,7 +126,7 @@ struct gbm_bo *gbm_bo_create_with_modifiers2(struct gbm_device *dev,
 
     uint32_t fixed_count = 0;
     const uint64_t *fixed =
-        hisi_fixup_modifier_list(modifiers, count, &fixed_count);
+        hisi_fixup_modifier_list(modifiers, count, width, height, &fixed_count);
     /* flags (GBM_BO_CREATE_*) unused by hisi path; forward the rest */
     return real_fn(dev, width, height, format, fixed, fixed_count);
 }

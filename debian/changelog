@@ -1,3 +1,13 @@
+gxde-hisi-9000c-gpu-compat (1.0.10) unstable; urgency=medium
+
+  * shim: 1x1 gbm 探针不再把仅 {INVALID} 的 modifier 列表改写为
+    {LINEAR}，避免 Chromium/Electron GPU 进程的 dmabuf 探针拿到
+    modifier=0 的 BO 后反复触发 gbm_bo_import 失败，修复 clash-party
+    不加 --disable-gpu 时刷屏 "modifier is 0" 且图形界面打不开的问题
+    （保持 wlcom 截屏/捕获路径的 modifier 修正不变）
+
+ -- shenmo <shenmo@spark-app.store>  Tue, 25 Aug 2026 20:20:00 +0800
+
 gxde-hisi-9000c-gpu-compat (1.0.9) unstable; urgency=medium
 
   * 新增 /usr/local/bin/obs 启动劫持：剥离 LD_PRELOAD /
