@@ -13,6 +13,7 @@ Package: gxde-hisi-9000c-gpu-compat
 Architecture: arm64
 Depends:
  gxde-wlcom (>= 2.1.6-gxde5),
+ gxde-hisi-9000c-audio-compat,
  hw-maleoon-910,
  libwayland-client0,
  libwayland-cursor0,

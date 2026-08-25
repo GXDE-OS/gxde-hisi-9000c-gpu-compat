@@ -1,3 +1,10 @@
+gxde-hisi-9000c-gpu-compat (1.0.11) unstable; urgency=medium
+
+  * Depends 新增 gxde-hisi-9000c-audio-compat，让 9000c 机型自动安装
+    声卡 I2S DAC 通路修复与 PipeWire 960/960 防爆音兼容包。
+
+ -- shenmo <shenmo@spark-app.store>  Tue, 25 Aug 2026 22:30:00 +0800
+
 gxde-hisi-9000c-gpu-compat (1.0.10) unstable; urgency=medium
 
   * shim: 1x1 gbm 探针不再把仅 {INVALID} 的 modifier 列表改写为
