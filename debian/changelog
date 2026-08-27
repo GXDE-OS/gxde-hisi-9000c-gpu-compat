@@ -1,3 +1,12 @@
+gxde-hisi-9000c-gpu-compat (1.0.12) unstable; urgency=medium
+
+  * postinst: 安装/升级时把 GXDE Display Manager (gxdm) 的预选登录会话
+    改为 gxde-wlcom（更新 /var/lib/gxdm/state.conf 的 [Last] Session，
+    保留 Last User 与 Greeter 配置），让 9000c 设备装完本包后登录界面
+    默认走 /usr/bin/startgxde_wlcom_9000c 硬件加速会话。
+
+ -- shenmo <shenmo@spark-app.store>  Thu, 27 Aug 2026 20:00:00 +0800
+
 gxde-hisi-9000c-gpu-compat (1.0.11) unstable; urgency=medium
 
   * Depends 新增 gxde-hisi-9000c-audio-compat，让 9000c 机型自动安装

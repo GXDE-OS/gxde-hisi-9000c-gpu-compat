@@ -114,6 +114,18 @@ startgxde_wlcom_9000c
   └─ exec /usr/bin/gxde-wlcom -s /usr/bin/startdde
 ```
 
+### GXDM 默认登录会话
+
+`debian/postinst` 在安装/升级时会把 GXDE Display Manager（gxdm）登录界面
+预选的会话设为 `gxde-wlcom`：更新 `/var/lib/gxdm/state.conf` 的
+`[Last] Session=/usr/share/wayland-sessions/gxde-wlcom.desktop`，
+并保留 `[Last] User`、`[Greeter]` 等其他配置。这样 9000c 设备装完本包后，
+登录界面默认走 `/usr/bin/startgxde_wlcom_9000c` 的硬件加速会话；用户之后
+在登录界面手动选择其他会话时，gxdm 仍按用户选择记录。
+
+仅在系统已安装 `gxdm` 且存在 `gxde-wlcom.desktop` 时生效，不会给本包增加
+gxdm 的硬依赖，也不重启正在运行的 gxdm——下次登录界面/重启生效。
+
 ---
 
 ## 构建与安装
@@ -210,4 +222,8 @@ CI（`.github/workflows/building.yml`）在推送 tag 时自动构建。
     需要时再禁用 Vulkan ICD）。
     `.desktop` 的 `Exec=<app> %U` 是裸命令名，按 PATH 解析，`/usr/local/bin`
     优先于 `/usr/bin`，故无需改桌面文件。新增此类劫持时记住同步 changelog。
+
+15. **`debian/postinst` 只改 gxdm 的 `[Last] Session`**，不要顺手改
+    `/etc/gxdm.conf` 或给包加 gxdm 硬依赖：本包在未装显示管理器的环境下
+    也允许安装，postinst 检测到 `/usr/bin/gxdm` 不存在时会跳过默认会话设置。
 
