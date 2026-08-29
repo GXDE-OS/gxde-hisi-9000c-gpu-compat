@@ -217,9 +217,13 @@ CI（`.github/workflows/building.yml`）在推送 tag 时自动构建。
     - gxde-movie：mpv hwdec 探测加载 libhvgr 段错误 → `/usr/local/bin/gxde-movie`
     - obs-studio：OBS 需要桌面 OpenGL 3.3，hisi libEGL 只支持 OpenGL ES，
       `eglBindAPI(EGL_OPENGL_API)` 失败导致视频初始化失败 → `/usr/local/bin/obs`
+    - firefox：hisi libEGL 无法 bind 桌面 GL，WebGL 上下文创建失败
+      （`FEATURE_FAILURE_EGL` / `FEATURE_FAILURE_WEBGL_EXHAUSTED_DRIVERS`）
+      → `/usr/local/bin/firefox`。注意 firefox 只 unset `LD_LIBRARY_PATH`、
+      保留 `LD_PRELOAD`，因为 shim 对 libmozwayland 的兼容处理仍然需要。
     处理方式与 `xwayland-mesa` 相同：装一个 `/usr/local/bin/<app>` 脚本
     （`unset LD_PRELOAD; unset LD_LIBRARY_PATH; exec /usr/bin/<app> "$@"`，
-    需要时再禁用 Vulkan ICD）。
+    需要时再禁用 Vulkan ICD；firefox 例外，只剥离 `LD_LIBRARY_PATH`）。
     `.desktop` 的 `Exec=<app> %U` 是裸命令名，按 PATH 解析，`/usr/local/bin`
     优先于 `/usr/bin`，故无需改桌面文件。新增此类劫持时记住同步 changelog。
 

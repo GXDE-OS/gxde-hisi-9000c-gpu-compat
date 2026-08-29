@@ -1,3 +1,13 @@
+gxde-hisi-9000c-gpu-compat (1.0.13) unstable; urgency=medium
+
+  * 新增 /usr/local/bin/firefox 启动劫持：只 unset LD_LIBRARY_PATH、
+    保留 libhisi_gbm_shim.so 的 LD_PRELOAD，让 Firefox 的
+    libEGL/libGLES 回落到系统 Mesa；修复 hisi 会话中网页 WebGL
+    上下文创建失败（libGFX_hisi 无法 eglBindAPI(EGL_OPENGL_API)，
+    Firefox 报 FEATURE_FAILURE_EGL / WebGL 内容不显示）的问题。
+
+ -- shenmo <shenmo@spark-app.store>  Sat, 29 Aug 2026 11:55:00 +0800
+
 gxde-hisi-9000c-gpu-compat (1.0.12) unstable; urgency=medium
 
   * postinst: 安装/升级时把 GXDE Display Manager (gxdm) 的预选登录会话

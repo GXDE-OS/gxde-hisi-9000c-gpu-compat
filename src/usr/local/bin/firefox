@@ -1,0 +1,25 @@
+#!/bin/bash
+# ============================================================
+# firefox 启动劫持（gxde-hisi-9000c-gpu-compat 提供）
+#
+# 背景：在 hisi 硬件加速会话中，会话级
+#   LD_LIBRARY_PATH=/usr/lib/gxde-hisi-9000c-gpu-compat/server-egl
+# 会把 libEGL.so.1 / libGLESv2.so.2 指向 libGFX_hisi。
+# Firefox 页面渲染可以工作，但创建 WebGL 上下文时
+# GLContextProviderEGL 先用桌面 OpenGL API 尝试：
+#   eglBindAPI(EGL_OPENGL_API)
+# libGFX_hisi 只支持 OpenGL ES，上述调用失败，Firefox 报
+#   FEATURE_FAILURE_EGL / FEATURE_FAILURE_WEBGL_EXHAUSTED_DRIVERS，
+# 网页中的 WebGL 内容空白。
+#
+# 处理：
+#   仅 unset LD_LIBRARY_PATH，让 Firefox 的 libEGL/libGLES 回落到
+#   系统 Mesa（llvmpipe）。保留 LD_PRELOAD：
+#   libhisi_gbm_shim.so 对 Firefox 有 libmozwayland 的
+#   wl_surface_interface 兼容处理，实测 Firefox + shim 正常。
+#
+# 安装位置 /usr/local/bin/firefox：桌面 .desktop 的 Exec 是裸命令名
+#   `firefox %U`，按 PATH 解析，/usr/local/bin 优先于 /usr/bin。
+# ============================================================
+unset LD_LIBRARY_PATH
+exec /usr/bin/firefox "$@"
