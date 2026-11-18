@@ -45,4 +45,6 @@ Description: HiSilicon (Kirin 9000c) GPU compatibility layer for GXDE
     gbm_bo_create_with_modifiers2/gbm_bo_get_fd_for_plane for Xwayland,
     and a corrected wl_surface_interface fixing Qt6 "no event 2")
   - xwayland-mesa wrapper so Xwayland uses Mesa instead of the hisi GL
+  - optional GNOME/Mutter Wayland session (gnome-hisi-9000c) using a
+    companion libgnome_hisi_shim.so; GXDE remains the default session
  .

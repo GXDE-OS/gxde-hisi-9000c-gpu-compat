@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+DIVERT=/usr/bin/Xwayland
+PKG=gxde-hisi-9000c-gpu-compat
+
+case "$1" in
+    remove|purge)
+        if dpkg-divert --list "$DIVERT" 2>/dev/null | grep -q "by $PKG"; then
+            dpkg-divert --package "$PKG" --rename --remove "$DIVERT"
+        fi
+        ;;
+esac
+
+exit 0

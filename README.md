@@ -8,6 +8,9 @@
 
 > 适用范围：运行麒麟 `5.10.97-38-9000c` 系列内核的麒麟 9000c 设备。
 
+> GNOME/Mutter Wayland 兼容分支（不改变 GXDE 默认会话，原 shim 未修改）：
+> 见 [README-GNOME.md](README-GNOME.md)。
+
 ---
 
 ## 背景：为什么需要这个包

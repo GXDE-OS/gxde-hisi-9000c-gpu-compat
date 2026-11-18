@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=GNOME on Wayland (Maleoon 910)
+Comment=GNOME Wayland with the GXDE hisi-9000c GPU compat layer
+Exec=/usr/local/bin/startgnome_hisi_9000c
+TryExec=/usr/local/bin/startgnome_hisi_9000c
+Type=Application
+DesktopNames=GNOME
+X-GDM-SessionRegisters=true
+X-GDM-CanRunHeadless=true
