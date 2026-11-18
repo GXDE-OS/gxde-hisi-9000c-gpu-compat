@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+# Mutter hardcodes XWAYLAND_PATH=/usr/bin/Xwayland.  The GNOME session needs
+# a wrapper there so Xwayland runs with system Mesa instead of the hisi
+# EGL/GLES stack.  Divert the distribution binary to Xwayland.real during
+# unpack; postrm restores it on remove/purge.
+DIVERT=/usr/bin/Xwayland
+DIVERT_TO=/usr/bin/Xwayland.real
+PKG=gxde-hisi-9000c-gpu-compat
+
+case "$1" in
+    install|upgrade)
+        if [ -e "$DIVERT" ] &&
+           ! dpkg-divert --list "$DIVERT" 2>/dev/null | grep -q "by $PKG"; then
+            dpkg-divert --package "$PKG" --divert "$DIVERT_TO" --rename "$DIVERT"
+        fi
+        ;;
+esac
+
+exit 0

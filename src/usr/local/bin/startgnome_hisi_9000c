@@ -1,0 +1,78 @@
+#!/bin/sh
+# ============================================================
+# startgnome_hisi_9000c — GNOME Wayland session with the
+# Kirin 9000c / Maleoon 910 GXDE hisi GPU compat layer.
+#
+# Wayland only.  No global X11 session.  Xwayland is still
+# available for X11 applications, exactly like the current GXDE
+# session, but /usr/bin/Xwayland is wrapped so that Xwayland
+# runs on system Mesa instead of the hisi EGL/GLES stack.
+# ============================================================
+
+HISI_DIR=/usr/lib/gxde-hisi-9000c-gpu-compat
+SHIM_DIR=/usr/local/lib/gxde-hisi-9000c-gnome-compat
+
+if [ ! -r "$SHIM_DIR/libgnome_hisi_shim.so" ]; then
+    echo "gnome-hisi-9000c: missing $SHIM_DIR/libgnome_hisi_shim.so" >&2
+    exit 1
+fi
+
+# Same hisi environment as /usr/bin/startgxde_wlcom_9000c.
+export LD_LIBRARY_PATH="$HISI_DIR/server-egl"
+export LD_PRELOAD="$SHIM_DIR/libgnome_hisi_shim.so $HISI_DIR/libhisi_gbm_shim.so"
+
+export XDG_SESSION_TYPE=wayland
+export XDG_SESSION_DESKTOP=gnome
+export XDG_CURRENT_DESKTOP=GNOME
+export GDK_BACKEND=wayland
+
+# GXDE's hisi cursor fix is in gxde-wlroots: backend/drm: add cursor plane
+# while legacy drm (16c20c3 + 5d6f314).  GXDE only adds the fake cursor
+# plane if drmModeSetCursor() succeeds.  On this hisi DPU Mutter's simple
+# backend gets ENXIO from drmModeSetCursor, which aborts the whole KMS
+# update and leaves the session without output.  So keep the known-working
+# atomic path (software cursor) by default.
+# Set GNOME_HISI_FORCE_LEGACY=1 only when testing the simple KMS path.
+if [ "${GNOME_HISI_FORCE_LEGACY:-0}" = 1 ]; then
+    export MUTTER_DEBUG_FORCE_KMS_MODE="${MUTTER_DEBUG_FORCE_KMS_MODE:-simple}"
+fi
+
+# Same thinking as GXDE's startgxde_wlcom_9000c:
+#   WLR_EGL_NO_MODIFIERS=1 / KYWC_EGL_NO_MODIFIERS=1
+# The hisi EGL/GBM stack returns broken buffers for some modifier lists
+# (especially {INVALID} or {INVALID, LINEAR}); Mutter's equivalents are to
+# stop using KMS modifiers and stop advertising them to clients, so both
+# compositor and clients allocate plain implicit/linear buffers.
+export MUTTER_DEBUG_USE_KMS_MODIFIERS=0
+export MUTTER_DEBUG_SEND_KMS_MODIFIERS=0
+
+# Kept for experiments / future Mutter versions.  Mutter 48.7 does not parse
+# MUTTER_DEBUG_PAINT; the real shaking fix is the EGL extension filter in
+# libgnome_hisi_shim.so, not this variable.
+export MUTTER_DEBUG_PAINT=disable-direct-scanout
+
+# Let Mutter pick the Wayland socket and the Xwayland display number.
+unset DISPLAY
+unset WAYLAND_DISPLAY
+unset XAUTHORITY
+
+# Keep a log for manual login testing.  Override with GNOME_HISI_LOG.
+LOG=${GNOME_HISI_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/gnome-hisi-9000c-session.log}
+if mkdir -p "$(dirname "$LOG")" 2>/dev/null; then
+    {
+        echo "=== $(date) ==="
+        echo "XDG_SESSION_TYPE=$XDG_SESSION_TYPE"
+        echo "XDG_SESSION_DESKTOP=$XDG_SESSION_DESKTOP"
+        echo "XDG_CURRENT_DESKTOP=$XDG_CURRENT_DESKTOP"
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        echo "LD_PRELOAD=$LD_PRELOAD"
+        echo "MUTTER_DEBUG_FORCE_KMS_MODE=$MUTTER_DEBUG_FORCE_KMS_MODE"
+        echo "MUTTER_DEBUG_USE_KMS_MODIFIERS=$MUTTER_DEBUG_USE_KMS_MODIFIERS"
+        echo "MUTTER_DEBUG_SEND_KMS_MODIFIERS=$MUTTER_DEBUG_SEND_KMS_MODIFIERS"
+        echo "MUTTER_DEBUG_PAINT=$MUTTER_DEBUG_PAINT"
+        echo "GNOME_HISI_KEEP_PARTIAL_UPDATE=${GNOME_HISI_KEEP_PARTIAL_UPDATE:-0}"
+    } >>"$LOG" 2>/dev/null
+    exec /usr/bin/gnome-session "$@" >>"$LOG" 2>&1
+fi
+
+exec /usr/bin/gnome-session "$@"

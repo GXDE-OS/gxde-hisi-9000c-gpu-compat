@@ -6,6 +6,7 @@ debian/debhelper-build-stamp
 debian/files
 debian/*.debhelper.log
 src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so
+src/usr/local/lib/gxde-hisi-9000c-gnome-compat/libgnome_hisi_shim.so
 *.deb
 *.buildinfo
 *.changes

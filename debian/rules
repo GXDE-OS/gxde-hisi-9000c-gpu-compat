@@ -8,10 +8,15 @@ override_dh_auto_build:
 	gcc -O2 -shared -fPIC \
 	    -o src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so \
 	    src/usr/lib/gxde-hisi-9000c-gpu-compat/hisi_gbm_shim.c -ldl
+# GNOME/Mutter 伴生 shim（不替换上面的 GXDE shim，只由 GNOME 启动器先加载）
+	gcc -O2 -shared -fPIC \
+	    -o src/usr/local/lib/gxde-hisi-9000c-gnome-compat/libgnome_hisi_shim.so \
+	    src/usr/local/lib/gxde-hisi-9000c-gnome-compat/gnome_hisi_shim.c -ldl
 
 # 重新构建前清理生成的 .so，避免陈旧产物
 override_dh_clean:
 	rm -f src/usr/lib/gxde-hisi-9000c-gpu-compat/libhisi_gbm_shim.so
+	rm -f src/usr/local/lib/gxde-hisi-9000c-gnome-compat/libgnome_hisi_shim.so
 	dh_clean
 
 # 按需求将启动劫持脚本直接装入 /usr/local/bin（dh_usrlocal 只支持整目录树，
@@ -22,4 +27,5 @@ override_dh_usrlocal:
 override_dh_shlibdeps:
 	dh_shlibdeps --exclude=libwayland-client.so.0.21.0 \
 		--exclude=libhisi_gbm_shim.so \
+		--exclude=libgnome_hisi_shim.so \
 		--exclude=libwayland-cursor.so.0.21.0 

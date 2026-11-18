@@ -1,0 +1,64 @@
+#!/bin/sh
+# ============================================================
+# /usr/bin/Xwayland wrapper for the GXDE hisi-9000c compat stack.
+#
+# GXDE runs Xwayland with system Mesa via its xwayland-mesa
+# wrapper (wlroots supports WLR_XWAYLAND).  Mutter hardcodes
+# /usr/bin/Xwayland, so the same effect is achieved here by
+# filtering only the hisi compat entries out of LD_PRELOAD /
+# LD_LIBRARY_PATH and executing the real binary.
+# ============================================================
+
+filter_paths() {
+    old_ifs=$IFS
+    IFS=:
+    result=
+    for entry in $1; do
+        case $entry in
+            *gxde-hisi-9000c-gpu-compat*|*gxde-hisi-9000c-gnome-compat*) ;;
+            *) result=${result:+$result:}$entry ;;
+        esac
+    done
+    IFS=$old_ifs
+    printf '%s' "$result"
+}
+
+filter_preload() {
+    old_ifs=$IFS
+    IFS=' '
+    result=
+    for entry in $1; do
+        case $entry in
+            *gxde-hisi-9000c-gpu-compat*|*gxde-hisi-9000c-gnome-compat*|*libgnome_hisi_shim.so*) ;;
+            *) result=${result:+$result }$entry ;;
+        esac
+    done
+    IFS=$old_ifs
+    printf '%s' "$result"
+}
+
+if [ -n "$LD_LIBRARY_PATH" ]; then
+    LD_LIBRARY_PATH=$(filter_paths "$LD_LIBRARY_PATH")
+    if [ -n "$LD_LIBRARY_PATH" ]; then
+        export LD_LIBRARY_PATH
+    else
+        unset LD_LIBRARY_PATH
+    fi
+fi
+
+if [ -n "$LD_PRELOAD" ]; then
+    LD_PRELOAD=$(filter_preload "$LD_PRELOAD")
+    if [ -n "$LD_PRELOAD" ]; then
+        export LD_PRELOAD
+    else
+        unset LD_PRELOAD
+    fi
+fi
+
+if [ ! -x /usr/bin/Xwayland.real ]; then
+    echo "Xwayland wrapper: /usr/bin/Xwayland.real is missing" >&2
+    echo "install the xwayland package so debian/preinst can divert it" >&2
+    exit 127
+fi
+
+exec /usr/bin/Xwayland.real "$@"
